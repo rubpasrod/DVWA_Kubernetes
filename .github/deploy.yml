@@ -1,0 +1,52 @@
+name: Deploy DVWA
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  validate:
+    name: Validate Manifests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install kubeval
+        run: |
+          wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
+          tar xf kubeval-linux-amd64.tar.gz
+          sudo mv kubeval /usr/local/bin/
+
+      - name: Validate Kubernetes YAML files
+        run: |
+          kubeval --strict manifests/*.yaml
+      
+      - name: Install kubesec
+        run: |
+          curl -sL https://github.com/controlplaneio/kubesec/releases/latest/download/kubesec-linux-amd64 > kubesec
+          chmod +x kubesec
+          sudo mv kubesec /usr/local/bin/
+      
+      - name: Security scan with kubesec
+        run: |
+          for file in manifests/*.yaml; do
+            echo "Scanning $file"
+            kubesec scan $file
+          done
+
+      - name: Install Trivy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget apt-transport-https gnupg
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install -y trivy
+      
+      - name: Scan images with Trivy
+        run: |
+          trivy image --exit-code 1 --severity HIGH,CRITICAL vulnerables/web-dvwa
+          trivy image --exit-code 1 --severity HIGH,CRITICAL mysql:5.7
+          
