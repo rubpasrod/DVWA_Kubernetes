@@ -18,15 +18,10 @@ jobs:
           wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
           tar xf kubeval-linux-amd64.tar.gz
           sudo mv kubeval /usr/local/bin/
-
       - name: Validate Kubernetes YAML files
         run: |
-          kubeval --strict manifests/*.yaml > kubeval_results.txt || echo "Validation failed" > kubeval_results.txt
-          
-      - name: Security scan with kubesec (Docker)
-        run: |
-          docker run --rm -v $(pwd)/manifests:/manifests controlplaneio/kubesec scan /manifests/*.yaml > kubesec_results.txt || echo "Kubesec scan failed" > kubesec_results.txt
-
+          kubeval --strict manifests/*.yaml
+      
       - name: Install Trivy
         run: |
           sudo apt-get update
@@ -35,18 +30,11 @@ jobs:
           echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
           sudo apt-get update
           sudo apt-get install -y trivy
-
+      
       - name: Scan images with Trivy
         run: |
-          trivy image --exit-code 1 --severity HIGH,CRITICAL vulnerables/web-dvwa > trivy_web_dvwa_results.txt || echo "Trivy scan for web-dvwa failed" > trivy_web_dvwa_results.txt
-          trivy image --exit-code 1 --severity HIGH,CRITICAL mysql:5.7 > trivy_mysql_results.txt || echo "Trivy scan for mysql:5.7 failed" > trivy_mysql_results.txt
-
-      - name: Upload validation and security scan results as artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: validation-and-security-scan-results
-          path: |
-            kubeval_results.txt
-            kubesec_results.txt
-            trivy_web_dvwa_results.txt
-            trivy_mysql_results.txt
+          trivy image --exit-code 1 --severity HIGH,CRITICAL vulnerables/web-dvwa
+          trivy image --exit-code 1 --severity HIGH,CRITICAL mysql:5.7
+      - name: Security scan with kubesec (Docker)
+        run: |
+          docker run --rm -v $(pwd)/manifests:/manifests controlplaneio/kubesec scan /manifests/*.yaml
