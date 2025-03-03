@@ -13,27 +13,32 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install kubeval
+      - name: Check if kubeval is installed
         run: |
-          wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
-          tar xf kubeval-linux-amd64.tar.gz
-          sudo mv kubeval /usr/local/bin/
+          if ! command -v kubeval &> /dev/null; then
+            echo "kubeval not found, installing..."
+            wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
+            tar xf kubeval-linux-amd64.tar.gz
+            sudo mv kubeval /usr/local/bin/
+          else
+            echo "kubeval is already installed"
+          fi
 
       - name: Validate Kubernetes YAML files
         run: |
-          kubeval --strict manifests/*.yaml
-      
+          kubeval --strict manifests/*.yaml || exit 1
+
       - name: Install kubesec
         run: |
-          curl -sL https://github.com/controlplaneio/kubesec/releases/latest/download/kubesec-linux-amd64 > kubesec
+          curl -sL https://github.com/controlplaneio/kubesec/releases/download/v0.16.0/kubesec-linux-amd64 > kubesec
           chmod +x kubesec
           sudo mv kubesec /usr/local/bin/
-      
+
       - name: Security scan with kubesec
         run: |
           for file in manifests/*.yaml; do
             echo "Scanning $file"
-            kubesec scan $file
+            kubesec scan $file || exit 1
           done
 
       - name: Install Trivy
@@ -44,9 +49,12 @@ jobs:
           echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
           sudo apt-get update
           sudo apt-get install -y trivy
-      
+
       - name: Scan images with Trivy
         run: |
           trivy image --exit-code 1 --severity HIGH,CRITICAL vulnerables/web-dvwa
           trivy image --exit-code 1 --severity HIGH,CRITICAL mysql:5.7
-          
+
+      - name: Verify Kubernetes access
+        run: |
+          kubectl cluster-info || exit 1

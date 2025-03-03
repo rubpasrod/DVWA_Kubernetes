@@ -7,5 +7,26 @@ Este documento describe el proceso de despliegue de la aplicación DVWA (Damn Vu
 - **Services:** Facilitarán la comunicación entre los pods de DVWA y la base de datos, y proporcionarán acceso al servicio de DVWA si es necesario.
 ## Deployment DVWA
 En esta sección
-``` el codigo ome ```
+
+Comprobar conexión DB
+Modificar contexto.
+```kubectl config set-context --current --namespace=training```
+Entrar en el pod.
+```kubectl exec -it dvwa-55fc4975cd-8l446 -- bash ```
+Una vez dentro del pod, entrar en SQL.
+```root@xxxx:/# mysql ```
+Mostrar bases de datos.
+```SHOW DATABASES;```
+Usar la que queremos.
+```USE DVWA;```
+Verificar que se han creado las tablas.
+```SHOW TABLES;```
+Debería mostrar algo así:
+```+----------------+```
+```| Tables_in_dvwa |```
+```+----------------+```
+```| guestbook      |```
+```| users          |```
+```+----------------+```
+Si no se ve, probar a darle a ```Create / Reset Database``` en setup.php o reiniciar el pod.
 
