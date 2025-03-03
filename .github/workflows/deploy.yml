@@ -22,33 +22,7 @@ jobs:
       - name: Validate Kubernetes YAML files
         run: |
           kubeval --strict manifests/*.yaml
-
-      - name: Install kubesec
-        run: |
-          curl -sL https://github.com/controlplaneio/kubesec/releases/download/v0.16.0/kubesec-linux-amd64 -o /tmp/kubesec
-          file /tmp/kubesec
-          chmod +x /tmp/kubesec
-          sudo mv /tmp/kubesec /usr/local/bin/
-
-
-      - name: Verify kubesec installation
-        run: |
-          if ! command -v kubesec &> /dev/null; then
-            echo "kubesec not found, installing..."
-            curl -sL https://github.com/controlplaneio/kubesec/releases/download/v0.16.0/kubesec-linux-amd64 -o kubesec
-            chmod +x kubesec
-            sudo mv kubesec /usr/local/bin/
-          else
-            echo "kubesec is already installed"
-          fi
-
-      - name: Security scan with kubesec
-        run: |
-          for file in manifests/*.yaml; do
-            echo "Scanning $file"
-            kubesec scan --skip-verify $file
-          done
-
+      
       - name: Install Trivy
         run: |
           sudo apt-get update
@@ -57,8 +31,12 @@ jobs:
           echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
           sudo apt-get update
           sudo apt-get install -y trivy
-
+      
       - name: Scan images with Trivy
         run: |
           trivy image --exit-code 1 --severity HIGH,CRITICAL vulnerables/web-dvwa
           trivy image --exit-code 1 --severity HIGH,CRITICAL mysql:5.7
+
+      - name: Security scan with kubesec (Docker)
+        run: |
+          docker run --rm -v $(pwd)/manifests:/manifests controlplaneio/kubesec scan /manifests/*.yaml
