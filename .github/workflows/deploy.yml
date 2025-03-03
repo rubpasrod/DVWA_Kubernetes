@@ -42,7 +42,7 @@ jobs:
           trivy image --exit-code 1 --severity HIGH,CRITICAL --format json mysql:5.7 > trivy_mysql_results.json || echo "Trivy scan for mysql:5.7 failed" > trivy_mysql_results.json
 
       - name: Upload Trivy results as artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: trivy-results
           path: |
