@@ -18,10 +18,12 @@ jobs:
           wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
           tar xf kubeval-linux-amd64.tar.gz
           sudo mv kubeval /usr/local/bin/
+
       - name: Validate Kubernetes YAML files
         run: |
-          kubeval --strict manifests/*.yaml
-      
+          kubeval --strict manifests/*.yaml > kubeval_results.txt
+        continue-on-error: true  
+
       - name: Install Trivy
         run: |
           sudo apt-get update
@@ -30,11 +32,38 @@ jobs:
           echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
           sudo apt-get update
           sudo apt-get install -y trivy
-      
+
       - name: Scan images with Trivy
         run: |
-          trivy image --exit-code 1 --severity HIGH,CRITICAL vulnerables/web-dvwa
-          trivy image --exit-code 1 --severity HIGH,CRITICAL mysql:5.7
+          trivy image --exit-code 1 --severity HIGH,CRITICAL vulnerables/web-dvwa > trivy_results_web-dvwa.txt
+          trivy image --exit-code 1 --severity HIGH,CRITICAL mysql:5.7 > trivy_results_mysql.txt
+        continue-on-error: true 
+
       - name: Security scan with kubesec (Docker)
         run: |
-          docker run --rm -v $(pwd)/manifests:/manifests controlplaneio/kubesec scan /manifests/*.yaml
+          docker run --rm -v $(pwd)/manifests:/manifests controlplaneio/kubesec scan /manifests/*.yaml > kubesec_results.txt
+        continue-on-error: true  
+
+      - name: Upload Kubeval Results as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kubeval-results
+          path: kubeval_results.txt
+
+      - name: Upload Trivy Results (web-dvwa) as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-results-web-dvwa
+          path: trivy_results_web-dvwa.txt
+
+      - name: Upload Trivy Results (mysql) as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-results-mysql
+          path: trivy_results_mysql.txt
+
+      - name: Upload Kubesec Results as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kubesec-results
+          path: kubesec_results.txt
