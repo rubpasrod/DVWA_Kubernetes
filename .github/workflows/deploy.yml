@@ -41,7 +41,7 @@ jobs:
 
       - name: Security scan with kubesec (Docker)
         run: |
-          docker run --rm -v $(pwd)/manifests:/manifests controlplaneio/kubesec scan /manifests/*.yaml > kubesec_results.txt
+          docker run --rm -v $(pwd)/manifests:/manifests kubesec/kubesec:v2 scan /manifests/*.yaml > kubesec_results.txt
         continue-on-error: true  
 
       - name: Upload Kubeval Results as Artifact
