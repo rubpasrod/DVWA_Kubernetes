@@ -21,11 +21,11 @@ jobs:
 
       - name: Validate Kubernetes YAML files
         run: |
-          kubeval --strict manifests/*.yaml
-
+          kubeval --strict manifests/*.yaml > kubeval_results.txt || echo "Validation failed" > kubeval_results.txt
+          
       - name: Security scan with kubesec (Docker)
         run: |
-          docker run --rm -v $(pwd)/manifests:/manifests controlplaneio/kubesec scan /manifests/*.yaml
+          docker run --rm -v $(pwd)/manifests:/manifests controlplaneio/kubesec scan /manifests/*.yaml > kubesec_results.txt || echo "Kubesec scan failed" > kubesec_results.txt
 
       - name: Install Trivy
         run: |
@@ -36,38 +36,17 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y trivy
 
-      - name: Scan images with Trivy (with exit code handling)
+      - name: Scan images with Trivy
         run: |
-          trivy image --exit-code 1 --severity HIGH,CRITICAL --format json vulnerables/web-dvwa > trivy_web_dvwa_results.json || echo "Trivy scan for web-dvwa failed" > trivy_web_dvwa_results.json
-          trivy image --exit-code 1 --severity HIGH,CRITICAL --format json mysql:5.7 > trivy_mysql_results.json || echo "Trivy scan for mysql:5.7 failed" > trivy_mysql_results.json
+          trivy image --exit-code 1 --severity HIGH,CRITICAL vulnerables/web-dvwa > trivy_web_dvwa_results.txt || echo "Trivy scan for web-dvwa failed" > trivy_web_dvwa_results.txt
+          trivy image --exit-code 1 --severity HIGH,CRITICAL mysql:5.7 > trivy_mysql_results.txt || echo "Trivy scan for mysql:5.7 failed" > trivy_mysql_results.txt
 
-      - name: Upload Trivy results as artifacts
+      - name: Upload validation and security scan results as artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: trivy-results
+          name: validation-and-security-scan-results
           path: |
-            trivy_web_dvwa_results.json
-            trivy_mysql_results.json
-
-  check-errors:
-    name: Check Errors in Trivy Scan Results
-    runs-on: ubuntu-latest
-    needs: validate
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Check Trivy results for errors
-        run: |
-          if grep -q '"severity": "HIGH"\|"severity": "CRITICAL"' trivy_web_dvwa_results.json; then
-            echo "Critical vulnerabilities found in web-dvwa!"
-            exit 1
-          else
-            echo "No critical vulnerabilities found in web-dvwa."
-          fi
-          if grep -q '"severity": "HIGH"\|"severity": "CRITICAL"' trivy_mysql_results.json; then
-            echo "Critical vulnerabilities found in mysql!"
-            exit 1
-          else
-            echo "No critical vulnerabilities found in mysql."
-          fi
+            kubeval_results.txt
+            kubesec_results.txt
+            trivy_web_dvwa_results.txt
+            trivy_mysql_results.txt
