@@ -39,6 +39,11 @@ jobs:
           trivy image --exit-code 1 --severity HIGH,CRITICAL mysql:5.7 > trivy_results_mysql.txt
         continue-on-error: true 
 
+      # Verificar archivos en el directorio manifests antes de ejecutar el escaneo
+      - name: Verificar archivos en el directorio manifests
+        run: |
+          ls -la $(pwd)/manifests
+
       - name: Security scan with kubesec (Docker)
         run: |
           docker run --rm -v $(pwd)/manifests:/manifests kubesec/kubesec:v2 scan /manifests/*.yaml > kubesec_results.txt
