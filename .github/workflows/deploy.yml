@@ -33,15 +33,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y trivy
 
-      - name: Scan images with Trivy
+      - name: Scan dvwa with Trivy
         run: |
           trivy image --exit-code 1 --severity HIGH,CRITICAL vulnerables/web-dvwa > trivy_results_web-dvwa.txt
-          trivy image --exit-code 1 --severity HIGH,CRITICAL mysql:5.7 > trivy_results_mysql.txt
         continue-on-error: true 
 
-      - name: Verificar archivos en el directorio manifests
+      - name: Scan mysql with Trivy
         run: |
-          ls -la $(pwd)/manifests
+          trivy image --exit-code 1 --severity HIGH,CRITICAL mysql:5.7 > trivy_results_mysql.txt
+        continue-on-error: true 
 
       - name: Security scan with kubesec (Docker)
         run: |
