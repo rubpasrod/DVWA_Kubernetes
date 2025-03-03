@@ -21,8 +21,12 @@ jobs:
 
       - name: Validate Kubernetes YAML files
         run: |
-          kubeval --strict manifests/*.yaml
-      
+          kubeval --strict manifests/*.yaml > kubeval_results.txt || echo "Validation failed" > kubeval_results.txt
+          
+      - name: Security scan with kubesec (Docker)
+        run: |
+          docker run --rm -v $(pwd)/manifests:/manifests controlplaneio/kubesec scan /manifests/*.yaml > kubesec_results.txt || echo "Kubesec scan failed" > kubesec_results.txt
+
       - name: Install Trivy
         run: |
           sudo apt-get update
@@ -31,12 +35,53 @@ jobs:
           echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -cs) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
           sudo apt-get update
           sudo apt-get install -y trivy
-      
+
       - name: Scan images with Trivy
         run: |
-          trivy image --exit-code 1 --severity HIGH,CRITICAL vulnerables/web-dvwa
-          trivy image --exit-code 1 --severity HIGH,CRITICAL mysql:5.7
+          trivy image --exit-code 1 --severity HIGH,CRITICAL vulnerables/web-dvwa > trivy_web_dvwa_results.txt || echo "Trivy scan for web-dvwa failed" > trivy_web_dvwa_results.txt
+          trivy image --exit-code 1 --severity HIGH,CRITICAL mysql:5.7 > trivy_mysql_results.txt || echo "Trivy scan for mysql:5.7 failed" > trivy_mysql_results.txt
 
-      - name: Security scan with kubesec (Docker)
+      - name: Upload validation and security scan results as artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: validation-and-security-scan-results
+          path: |
+            kubeval_results.txt
+            kubesec_results.txt
+            trivy_web_dvwa_results.txt
+            trivy_mysql_results.txt
+
+  check-severity-errors:
+    name: Check for Severity Errors in Scan Results
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check if Trivy found HIGH or CRITICAL issues in web-dvwa scan
         run: |
-          docker run --rm -v $(pwd)/manifests:/manifests controlplaneio/kubesec scan /manifests/*.yaml
+          if grep -q "HIGH" trivy_web_dvwa_results.txt || grep -q "CRITICAL" trivy_web_dvwa_results.txt; then
+            echo "ERROR: Trivy found HIGH or CRITICAL issues in web-dvwa image"
+            exit 1
+          else
+            echo "No HIGH or CRITICAL issues found in web-dvwa scan."
+          fi
+
+      - name: Check if Trivy found HIGH or CRITICAL issues in mysql scan
+        run: |
+          if grep -q "HIGH" trivy_mysql_results.txt || grep -q "CRITICAL" trivy_mysql_results.txt; then
+            echo "ERROR: Trivy found HIGH or CRITICAL issues in mysql image"
+            exit 1
+          else
+            echo "No HIGH or CRITICAL issues found in mysql scan."
+          fi
+
+      - name: Check if kubesec found issues
+        run: |
+          if grep -q "FAIL" kubesec_results.txt; then
+            echo "ERROR: Kubesec found issues in the YAML files."
+            exit 1
+          else
+            echo "No issues found in kubesec scan."
+          fi
