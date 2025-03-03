@@ -44,7 +44,7 @@ jobs:
         run: |
           for file in manifests/*.yaml; do
             echo "Scanning $file"
-            kubesec scan $file
+            kubesec scan --skip-verify $file
           done
 
       - name: Install Trivy
