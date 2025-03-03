@@ -42,7 +42,7 @@ jobs:
           trivy image --exit-code 1 --severity HIGH,CRITICAL mysql:5.7 > trivy_mysql_results.txt || echo "Trivy scan for mysql:5.7 failed" > trivy_mysql_results.txt
 
       - name: Upload validation and security scan results as artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: validation-and-security-scan-results
           path: |
