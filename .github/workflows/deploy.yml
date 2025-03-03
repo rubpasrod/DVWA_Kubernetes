@@ -26,10 +26,11 @@ jobs:
       - name: Install kubesec
         run: |
           curl -sL https://github.com/controlplaneio/kubesec/releases/download/v0.16.0/kubesec-linux-amd64 -o kubesec
+          file kubesec
           chmod +x kubesec
           sudo mv kubesec /usr/local/bin/
 
-      - name: Check kubesec installation
+      - name: Verify kubesec installation
         run: |
           if ! command -v kubesec &> /dev/null; then
             echo "kubesec not found, installing..."
