@@ -62,7 +62,6 @@ jobs:
           path: trivy_results_web-dvwa.txt
 
       - name: Upload Trivy Results (mysql) as Artifact
-        if: exists('trivy_results_mysql.txt')
         uses: actions/upload-artifact@v4
         with:
           name: trivy-results-mysql
