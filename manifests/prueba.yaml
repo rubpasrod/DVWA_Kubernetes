@@ -5,9 +5,10 @@ metadata:
   name: dvwa-config
   namespace: training
 data:
-  db_host: mysql-service
+  db_host: mysql-service 
 
 ---
+
 # Secret para credenciales de MySQL
 apiVersion: v1
 kind: Secret
@@ -16,11 +17,12 @@ metadata:
   namespace: training
 type: Opaque
 data:
-  db_user: cGFzc3dvcmQ=   # "password" en Base64
+  db_user: YXBw  # "app" en Base64
   db_pass: cGFzc3dvcmQxMjM=  # "password123" en Base64
 
 ---
-# PersistentVolumeClaim (PVC)
+
+# PersistentVolumeClaim (PVC) para almacenamiento de MySQL
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -32,9 +34,10 @@ spec:
   resources:
     requests:
       storage: 5Gi
-  storageClassName: managed-premium
+  storageClassName: standard
 
 ---
+
 # Deployment de MySQL con volumen hostPath
 apiVersion: apps/v1
 kind: Deployment
@@ -76,16 +79,17 @@ spec:
               key: db_pass
         volumeMounts:
         - name: mysql-storage
-          mountPath: /var/lib/mysql 
+          mountPath: /var/lib/mysql
       volumes:
       - name: mysql-storage
         hostPath:
-          path: /home/r.pascual.rodriguez/test/mysql-data
-          type: DirectoryOrCreate     
+          path: /home/ruben/mysql-data
+          type: DirectoryOrCreate
 
 ---
+
 # Service de MySQL
-apiVersion: v1  
+apiVersion: v1
 kind: Service
 metadata:
   name: mysql-service
@@ -100,6 +104,7 @@ spec:
   type: ClusterIP
 
 ---
+
 # Deployment de DVWA
 apiVersion: apps/v1
 kind: Deployment
@@ -137,8 +142,17 @@ spec:
             secretKeyRef:
               name: dvwa-secret
               key: db_pass
+        - name: DB_DATABASE
+          value: dvwa
+        - name: DB_PORT
+          value: "3306"
+        - name: DEFAULT_SECURITY_LEVEL
+          value: "impossible"
+        - name: DEFAULT_LOCALE
+          value: "en"
 
 ---
+
 # Service de DVWA
 apiVersion: v1
 kind: Service
@@ -155,6 +169,7 @@ spec:
   type: ClusterIP
 
 ---
+
 # Network Policy para permitir que DVWA acceda a MySQL
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
