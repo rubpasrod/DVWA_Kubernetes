@@ -49,10 +49,12 @@ jobs:
           tar -xvf kubesec_linux_amd64.tar.gz
           chmod +x kubesec
           sudo mv kubesec /usr/local/bin/
-      
+          
       - name: Security scan with kubesec
         run: |
-          kubesec scan manifests/*.yaml > kubesec_results.txt
+          for file in manifests/*.yaml; do
+            kubesec scan "$file" >> kubesec_results.txt
+          done
         continue-on-error: true
 
       - name: Create artifacts directory
