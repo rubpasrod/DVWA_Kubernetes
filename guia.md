@@ -30,3 +30,5 @@ Debería mostrar algo así:
 ```+----------------+```
 Si no se ve, probar a darle a ```Create / Reset Database``` en setup.php o reiniciar el pod.
 
+probar
+kubectl port-forward service/dvwa-service 8080:80 -n training

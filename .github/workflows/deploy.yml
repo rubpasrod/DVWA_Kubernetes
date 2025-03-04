@@ -43,6 +43,18 @@ jobs:
           trivy image --exit-code 1 --severity HIGH,CRITICAL mysql:5.7 > trivy_results_mysql.txt
         continue-on-error: true 
 
+      - name: Install Kubesec
+        run: |
+          wget https://github.com/controlplaneio/kubesec/releases/download/v2.14.2/kubesec_linux_amd64.tar.gz
+          tar -xvf kubesec_linux_amd64.tar.gz
+          chmod +x kubesec
+          sudo mv kubesec /usr/local/bin/
+      
+      - name: Security scan with kubesec
+        run: |
+          kubesec scan manifests/prueba.yaml > kubesec_results.txt
+        continue-on-error: true
+      
       - name: Security scan with kubesec (Docker)
         run: |
           # Usar la ruta directa para evitar el error "no such file"
