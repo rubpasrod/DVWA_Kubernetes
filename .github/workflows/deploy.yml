@@ -54,33 +54,21 @@ jobs:
         run: |
           kubesec scan manifests/prueba.yaml > kubesec_results.txt
         continue-on-error: true
-      
-      - name: Security scan with kubesec (Docker)
+
+      - name: Create artifacts directory
+        run: mkdir -p artifacts
+
+      - name: Move results to artifacts directory
         run: |
-          # Usar la ruta directa para evitar el error "no such file"
-          docker run --rm -v $(pwd)/manifests:/manifests kubesec/kubesec:v2 scan /manifests/prueba.yaml > kubesec_results.txt
-        continue-on-error: true  
+          mv kubeval_results.txt artifacts/
+          mv trivy_results_web-dvwa.txt artifacts/
+          mv trivy_results_mysql.txt artifacts/
+          mv kubesec_results.txt artifacts/
 
-      - name: Upload Kubeval Results as Artifact
+      - name: Upload all scan results as artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: kubeval-results
-          path: kubeval_results.txt
+          name: security-scan-results
+          path: artifacts/
 
-      - name: Upload Trivy Results (web-dvwa) as Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: trivy-results-web-dvwa
-          path: trivy_results_web-dvwa.txt
 
-      - name: Upload Trivy Results (mysql) as Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: trivy-results-mysql
-          path: trivy_results_mysql.txt
-
-      - name: Upload Kubesec Results as Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: kubesec-results
-          path: kubesec_results.txt
