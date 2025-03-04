@@ -52,7 +52,7 @@ jobs:
           
       - name: Security scan with kubesec
         run: |
-          kubesec scan $(ls manifests/*.yaml) > kubesec_results.txt
+          find manifests/ -name "*.yaml" -type f -exec kubesec scan {} \; >> kubesec_results.txt
         continue-on-error: true
 
       - name: Create artifacts directory
