@@ -1,0 +1,8 @@
+# ConfigMap for DVWA
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dvwa-config
+  namespace: training
+data:
+  db_host: mysql-service 

@@ -1,0 +1,45 @@
+# dvwa deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dvwa
+  namespace: training
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dvwa
+  template:
+    metadata:
+      labels:
+        app: dvwa
+    spec:
+      containers:
+      - name: dvwa
+        image: vulnerables/web-dvwa
+        ports:
+        - containerPort: 80
+        env:
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: dvwa-config
+              key: db_host
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: dvwa-secret
+              key: db_user
+        - name: DB_PASS
+          valueFrom:
+            secretKeyRef:
+              name: dvwa-secret
+              key: db_pass
+        - name: DB_DATABASE
+          value: dvwa
+        - name: DB_PORT
+          value: "3306"
+        - name: DEFAULT_SECURITY_LEVEL
+          value: "impossible"
+        - name: DEFAULT_LOCALE
+          value: "en"

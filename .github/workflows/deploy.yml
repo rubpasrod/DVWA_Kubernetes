@@ -52,7 +52,7 @@ jobs:
       
       - name: Security scan with kubesec
         run: |
-          kubesec scan manifests/prueba.yaml > kubesec_results.txt
+          kubesec scan manifests/*.yaml > kubesec_results.txt
         continue-on-error: true
 
       - name: Create artifacts directory
