@@ -10,16 +10,26 @@ El despliegue se divide en los siguientes recursos:
 - **NetworkPolicy**: Permisos de acceso entre DVWA y MySQL
 ## Pasos previos
 Vamos a suponer que ya se ha instalado [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/), vamos a posicionarnos en el namespace que usaremos (training).
-```kubectl config set-context --current --namespace=training```
+```
+kubectl config set-context --current --namespace=training
+```
 Si no está creado el namespace.
-```kubectl create namespace training```
+```
+kubectl create namespace training
+```
 ## Cómo probarlo
 Para poder probarlo vamos a necesitar algo que nos permita usar kubernetes de forma local. Hemos usado Minikube. [Enlace a la guía de instalación y uso](https://minikube.sigs.k8s.io/docs/start/?arch=%2Fwindows%2Fx86-64%2Fstable%2F.exe+download)
-```minikube start```
+```
+minikube start
+```
 Si queremos añadir nuestros yaml:
-```kubectl apply -f /home/ruta/manifests```
+```
+kubectl apply -f /home/ruta/manifests
+```
 Para probar si la aplicación está funcionando ejecutamos el siguiente comando (cambiar el nombre del servicio):
-```kubectl port-forward service/dvwa-service 8080:80 -n training```
+```
+kubectl port-forward service/dvwa-service 8080:80 -n training
+```
 
 
 
@@ -29,17 +39,29 @@ En esta sección veremos algunos fallos encontrados y su solución.
 ### Comprobar conexión con la DB
 Pensaba que no estaba enlazando bien la BD. Aunque se creara no era capaz de verla. Esta es la forma para comprobarlo
 Modificar contexto.
-```kubectl config set-context --current --namespace=training```
+```
+kubectl config set-context --current --namespace=training
+```
 Entrar en el pod (ajustar nombre).
-```kubectl exec -it dvwa-55fc4975cd-8l446 -- bash ```
+```
+kubectl exec -it dvwa-55fc4975cd-8l446 -- bash
+```
 Una vez dentro del pod, entrar en SQL.
-```root@xxxx:/# mysql ```
+```
+root@xxxx:/# mysql
+```
 Mostrar bases de datos.
-```SHOW DATABASES;```
+```
+SHOW DATABASES;
+```
 Usar la que queremos.
-```USE DVWA;```
+```
+USE DVWA;
+```
 Verificar que se han creado las tablas.
-```SHOW TABLES;```
+```
+SHOW TABLES;
+```
 Debería mostrar algo así:
 ```
 +----------------+
