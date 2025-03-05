@@ -1,7 +1,13 @@
 # Despliegue de DVWA en Kubernetes 
 ---
 Este documento describe el proceso de despliegue de la aplicación DVWA (Damn Vulnerable Web Application) y su base de datos en un clúster de Kubernetes. El despliegue se hará en el namespace training. 
-
+## Estructura del Despliegue
+El despliegue se divide en los siguientes recursos:
+**ConfigMap y Secret**: Configuración y credenciales de acceso
+**PersistentVolumeClaim (PVC)**: Almacenamiento para MySQL
+**MySQL Deployment y Service**
+**DVWA Deployment y Service**
+**NetworkPolicy**: Permisos de acceso entre DVWA y MySQL
 ## Pasos previos
 Vamos a suponer que ya se ha instalado [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/), vamos a posicionarnos en el namespace que usaremos (training).
 ```kubectl config set-context --current --namespace=training```
@@ -14,6 +20,8 @@ Si queremos añadir nuestros yaml:
 ```kubectl apply -f /home/ruta/manifests```
 Para probar si la aplicación está funcionando ejecutamos el siguiente comando (cambiar el nombre del servicio):
 ```kubectl port-forward service/dvwa-service 8080:80 -n training```
+
+
 
 ## Troubleshooting
 En esta sección veremos algunos fallos encontrados y su solución. 
@@ -43,6 +51,22 @@ Debería mostrar algo así:
 ```
 
 Si no se ve, probar a darle a ```Create / Reset Database``` en setup.php o reiniciar el pod.
+
+### Verificar los Pods
+
+```kubectl get pods -n training```
+
+### Verificar los Services
+
+```kubectl get svc -n training```
+
+### Verificar los Logs
+
+Si hay errores, se pueden revisar los logs de los pods:
+```
+kubectl logs -n training -l app=mysql
+kubectl logs -n training -l app=dvwa
+```
 
 ## Resultados de LOGS
 En esta sección veremos los diferentes logs de los análisis.
