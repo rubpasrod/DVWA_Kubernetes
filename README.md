@@ -3,11 +3,11 @@
 Este documento describe el proceso de despliegue de la aplicación DVWA (Damn Vulnerable Web Application) y su base de datos en un clúster de Kubernetes. El despliegue se hará en el namespace training. 
 ## Estructura del Despliegue
 El despliegue se divide en los siguientes recursos:
-**ConfigMap y Secret**: Configuración y credenciales de acceso
-**PersistentVolumeClaim (PVC)**: Almacenamiento para MySQL
-**MySQL Deployment y Service**
-**DVWA Deployment y Service**
-**NetworkPolicy**: Permisos de acceso entre DVWA y MySQL
+- **ConfigMap y Secret**: Configuración y credenciales de acceso
+- **PersistentVolumeClaim (PVC)**: Almacenamiento para MySQL
+- **MySQL Deployment y Service**
+- **DVWA Deployment y Service**
+- **NetworkPolicy**: Permisos de acceso entre DVWA y MySQL
 ## Pasos previos
 Vamos a suponer que ya se ha instalado [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/), vamos a posicionarnos en el namespace que usaremos (training).
 ```kubectl config set-context --current --namespace=training```
